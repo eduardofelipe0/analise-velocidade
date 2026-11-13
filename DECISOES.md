@@ -2,12 +2,10 @@
 
 ## 1. Que situações o enunciado não cobria e o que decidi?
 
-Durante o desenvolvimento, encontrei algumas situações que não estavam totalmente definidas no enunciado e precisei estabelecer critérios para tratá-las.
-
 - **Limite de velocidade inválido:** decidi considerar inválidas as leituras com limite menor ou igual a zero, evitando cálculos incorretos e divisões por zero.
 - **Linhas em branco:** optei por contabilizá-las como linhas lidas, mas registrá-las como inválidas, mantendo a numeração original do CSV.
 - **Formatos diferentes:** implementei suporte a datas nos formatos ISO e brasileiro, além de números decimais com ponto ou vírgula.
-- **Placas:** normalizei as placas para letras maiúsculas, evitando que diferenças de capitalização fossem interpretadas como veículos distintos.
+- **Placas:** normalizei as placas para letras maiúsculas, evitando que diferenças de capitalização fossem interpretadas como veículos diferentes.
 - **Leituras duplicadas:** optei por mantê-las, já que o enunciado não determinava a remoção de duplicidades.
 - **Cálculo percentual:** utilizei `BigDecimal` para controlar a precisão e o arredondamento dos valores.
 
@@ -23,6 +21,6 @@ Os testes automatizados ajudaram a verificar situações importantes, como inter
 
 ## 3. O que faria diferente com mais tempo?
 
-Com mais tempo, ampliaria os testes automatizados, principalmente os testes de integração entre a API e o frontend, além de melhorar o tratamento de arquivos maiores e de situações inesperadas.
+Com mais tempo, ampliaria ainda mais os testes automatizados, principalmente os testes de integração entre a API e o frontend, além de melhorar o tratamento de arquivos maiores e de situações inesperadas.
 
-Também investiria em melhorias de acessibilidade e na experiência do usuário, mantendo a aplicação simples e organizada, como solicitado no desafio.
+Também investiria em melhorias de acessibilidade e na experiência do usuário, e também consideraria a implementação de um banco de dados para armazenar o histórico das análises, os episódios identificados e outras informações relevantes, permitindo a realização de consultas no futuro.
