@@ -1,108 +1,96 @@
-
 # Análise de Velocidade — Desafio Full Stack
 
-Aplicação Full Stack desenvolvida com Java, Spring Boot e Angular
-para analisar registros de velocidade de veículos a partir de um
-arquivo CSV.
+Aplicação Full Stack desenvolvida com **Java, Spring Boot e Angular** para analisar registros de velocidade de veículos a partir de arquivos CSV.
 
-O sistema valida os dados, identifica episódios de excesso de
-velocidade, classifica a gravidade das ocorrências e gera um
-ranking de veículos por pontuação.
+O sistema identifica leituras acima do limite permitido, agrupa essas leituras em episódios de excesso de velocidade e gera um ranking dos veículos de acordo com a gravidade das ocorrências.
 
 ## Tecnologias utilizadas
 
-### Backend
+**Backend**
 - Java 21
 - Spring Boot 4.1.2
-- Spring Web MVC
 - Maven
 - JUnit 5
 
-### Frontend
+**Frontend**
 - Angular 21
-- TypeScript
+- TypeScript 5.9
 - HTML e CSS
 
 ## Funcionalidades
 
-- Upload de arquivos CSV
-- Validação individual das leituras
-- Identificação de linhas inválidas
-- Normalização de placas
-- Identificação de episódios de excesso de velocidade
-- Classificação da gravidade
-- Ranking dos veículos
-- Filtro de episódios por gravidade
-- Interface responsiva
-- Mensagens de carregamento e erro
+- Upload e processamento de arquivos CSV.
+- Validação individual das leituras, sem interromper o processamento por erros em registros específicos.
+- Identificação dos episódios de excesso de velocidade.
+- Classificação dos episódios em leves, graves ou gravíssimos.
+- Ranking de veículos por pontuação, velocidade máxima e placa.
+- Visualização das linhas inválidas e dos motivos de rejeição.
+- Filtro de episódios por gravidade, sem novas requisições à API.
+- Interface responsiva, com indicadores de carregamento e mensagens de erro.
 
 ## Estrutura do projeto
 
 ```text
 analise-velocidade/
-├── backend/
-├── frontend/
-├── exemplos/
+├── backend/       # API REST e regras de negócio
+├── frontend/      # Interface Angular
+├── exemplos/      # CSV para testes
 ├── README.md
 └── DECISOES.md
 ```
 
 ## Pré-requisitos
 
-- Java 21
+- JDK 21
 - Node.js 22
 - npm
-- Git
+- Git (para clonar o repositório)
 
-O backend possui Maven Wrapper, portanto não é necessário
-instalar o Maven globalmente.
+Não é necessário instalar o Maven separadamente, pois o backend utiliza Maven Wrapper.
 
 ## Como executar
 
 ### 1. Backend
 
-Abra um terminal na pasta backend:
+Abra um terminal na pasta `backend`:
 
+**Windows (PowerShell):**
 ```powershell
-cd backend
 .\mvnw.cmd spring-boot:run
 ```
 
-A API será iniciada em:
+**Linux/macOS:**
+```bash
+./mvnw spring-boot:run
+```
 
-http://localhost:8080
+A API ficará disponível em `http://localhost:8080`.
 
 ### 2. Frontend
 
-Em outro terminal:
+Em outro terminal, na pasta `frontend`, execute:
 
-```powershell
-cd frontend
+```bash
 npm install
 npm start
 ```
 
-Acesse:
+Acesse `http://localhost:4200`.
 
-http://localhost:4200
-
-Durante o desenvolvimento, o Angular utiliza um proxy
-para encaminhar as requisições /api ao Spring Boot.
+Durante o desenvolvimento, o Angular utiliza um proxy para encaminhar as requisições `/api` ao backend.
 
 ## Como utilizar
 
-1. Abra a aplicação no navegador.
+1. Abra a interface no navegador.
 2. Selecione um arquivo CSV.
-3. Clique em "Analisar CSV".
-4. Visualize o resumo do processamento.
-5. Consulte o ranking dos veículos.
-6. Visualize os episódios identificados.
-7. Utilize o filtro por gravidade.
-8. Consulte as linhas inválidas.
+3. Clique em **Analisar CSV**.
+4. Visualize o resumo do processamento, o ranking dos veículos e os episódios identificados.
+5. Utilize o filtro por gravidade para consultar os episódios.
+6. Consulte a tabela de linhas inválidas, caso existam.
 
-## Formato do CSV
+## Formato do arquivo
 
-O arquivo utiliza ponto e vírgula como separador.
+O CSV deve conter o cabeçalho:
 
 ```csv
 placa;dataHora;velocidadeKmh;limiteKmh
@@ -110,85 +98,87 @@ ABC1D23;2026-10-05T08:00:00;72;60
 DEF2G34;2026-10-05T08:05:00;75;60
 ```
 
-Também são aceitos números decimais com vírgula e datas no
-formato brasileiro.
+Os campos são separados por ponto e vírgula (`;`).
+
+Também são aceitos valores decimais com vírgula e datas no formato `dd/MM/yyyy HH:mm:ss`.
 
 ## API REST
 
-### POST /api/analises
+**POST `/api/analises`**
 
-Recebe um arquivo CSV utilizando multipart/form-data.
+Recebe um arquivo CSV utilizando `multipart/form-data`, com o nome de campo `arquivo`.
 
-Nome do campo: arquivo
-
-Exemplo:
+Exemplo, a partir da raiz do repositório:
 
 ```powershell
 curl.exe -X POST "http://localhost:8080/api/analises" -F "arquivo=@exemplos/leituras.csv"
 ```
 
-A resposta contém:
+A resposta JSON contém:
 
-- resumo
-- episodios
-- ranking
-- linhasInvalidas
+- `resumo`: linhas lidas, válidas, inválidas e total de episódios.
+- `episodios`: informações e classificação de cada episódio.
+- `ranking`: veículos ordenados pela pontuação e critérios de desempate.
+- `linhasInvalidas`: número da linha e motivo da rejeição.
+
+Arquivos vazios ou com cabeçalho incorreto retornam HTTP 400.
 
 ## Regras de negócio
 
-Uma leitura é considerada excesso quando a velocidade
-ultrapassa o limite da via em mais de 5 km/h.
+Uma leitura é considerada excesso quando:
 
-Leituras consecutivas em excesso do mesmo veículo são
-agrupadas quando o intervalo entre elas é de até 5 minutos.
+`velocidade > limite + 5 km/h`
 
-Uma leitura sem excesso encerra o episódio.
+As leituras são agrupadas por veículo e ordenadas cronologicamente. Leituras consecutivas em excesso fazem parte do mesmo episódio quando o intervalo entre elas não ultrapassa cinco minutos.
 
-### Classificação
+Uma leitura sem excesso interrompe a sequência.
 
-| Gravidade | Excesso | Pontos |
-|-----------|---------|--------|
-| Leve | Até 20% | 1 |
-| Grave | Acima de 20% até 50% | 3 |
-| Gravíssima | Acima de 50% | 5 |
+O percentual de excesso é calculado por:
 
-### Ranking
+`(velocidade - limite) / limite * 100`
 
-Os veículos são ordenados por:
+O resultado é arredondado para uma casa decimal.
 
-1. Maior pontuação total.
-2. Maior velocidade registrada em episódio.
-3. Placa em ordem alfabética.
+| Excesso máximo | Gravidade | Pontos |
+|---|---|---|
+| Até 20% | LEVE | 1 |
+| Acima de 20% até 50% | GRAVE | 3 |
+| Acima de 50% | GRAVISSIMA | 5 |
+
+O ranking considera, nesta ordem, maior pontuação total, maior velocidade registrada em episódio e placa em ordem alfabética.
+
+Veículos sem episódios não aparecem no ranking.
 
 ## Testes automatizados
 
-Execute na pasta backend:
+Na pasta `backend`, execute:
 
 ```powershell
 .\mvnw.cmd test
 ```
 
-Os testes cobrem leitura e validação do CSV,
-identificação de episódios, classificação da gravidade,
-intervalos de tempo e critérios de ordenação.
+Os testes verificam validação do CSV, limites de tolerância, agrupamento e separação de episódios, gravidade e ordenação do ranking.
 
 ## Build do frontend
 
-Na pasta frontend:
+Na pasta `frontend`, execute:
 
-```powershell
+```bash
 npm run build
 ```
 
-## Resultado com o CSV de exemplo
+## Resultado do CSV de exemplo
 
-- 43 linhas lidas
-- 36 linhas válidas
-- 7 linhas inválidas
-- 13 episódios
-- 8 veículos no ranking
+Com o arquivo fornecido no desafio, obtivemos:
+
+| Indicador | Resultado |
+|---|---:|
+| Linhas lidas | 43 |
+| Linhas válidas | 36 |
+| Linhas inválidas | 7 |
+| Episódios identificados | 13 |
+| Veículos no ranking | 8 |
 
 ## Decisões técnicas
 
-As decisões tomadas durante o desenvolvimento estão
-documentadas em [DECISOES.md](DECISOES.md).
+As situações não especificadas pelo enunciado e as decisões adotadas durante o desenvolvimento estão descritas em [DECISOES.md](DECISOES.md).
