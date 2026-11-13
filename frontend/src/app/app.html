@@ -1,84 +1,136 @@
 <main class="container">
 
   <header class="cabecalho">
-    <h1>Análise de Velocidade</h1>
-    <p>
-      Envie um arquivo CSV para identificar infrações
-      e visualizar o ranking de veículos.
-    </p>
+    <div class="cabecalho-texto">
+      <span class="rotulo">PAINEL DE ANÁLISE</span>
+      <h1>Análise de Velocidade</h1>
+      <p>
+        Envie as leituras de uma frota para identificar
+        episódios de excesso de velocidade e consultar
+        o ranking dos veículos.
+      </p>
+    </div>
   </header>
 
-  <section class="card upload">
-    <h2>Importar arquivo</h2>
+  <section class="card upload" aria-labelledby="titulo-upload">
+    <div class="secao-titulo">
+      <div>
+        <h2 id="titulo-upload">Importar leituras</h2>
+        <p>Arquivo CSV separado por ponto e vírgula (;).</p>
+      </div>
+    </div>
 
-    <input type="file" accept=".csv,text/csv" (change)="selecionarArquivo($event)" />
+    <div class="upload-controles">
+      <div class="seletor-arquivo">
+        <label for="arquivo-csv">Selecionar arquivo CSV</label>
 
-    @if (arquivoSelecionado()) {
-    <p class="arquivo">
-      Arquivo: {{ arquivoSelecionado()?.name }}
+        <input id="arquivo-csv" type="file" accept=".csv,text/csv" [disabled]="carregando()"
+          (change)="selecionarArquivo($event)" />
+
+        @if (arquivoSelecionado(); as arquivo) {
+        <p class="arquivo-selecionado">
+          Arquivo: <strong>{{ arquivo.name }}</strong>
+          · {{ formatarNumero(arquivo.size / 1024, 1) }} KB
+        </p>
+        } @else {
+        <p class="ajuda">Nenhum arquivo selecionado.</p>
+        }
+      </div>
+
+      <button type="button" (click)="analisar()" [disabled]="!arquivoSelecionado() || carregando()"
+        [attr.aria-busy]="carregando()">
+        @if (carregando()) {
+        <span class="spinner" aria-hidden="true"></span>
+        Analisando...
+        } @else {
+        Analisar CSV
+        }
+      </button>
+    </div>
+
+    @if (carregando()) {
+    <p class="status" role="status" aria-live="polite">
+      Enviando e processando as leituras.
+      Aguarde a resposta da API.
     </p>
     }
 
-    <button type="button" (click)="analisar()" [disabled]="!arquivoSelecionado() || carregando()">
-      {{ carregando() ? 'Analisando...' : 'Analisar CSV' }}
-    </button>
-
     @if (erro()) {
-    <p class="erro" role="alert">{{ erro() }}</p>
+    <div class="mensagem-erro" role="alert">
+      {{ erro() }}
+    </div>
     }
   </section>
 
   @if (resultado(); as dados) {
 
-  <section class="resumo">
-    <div class="card">
+  <section class="resumo" aria-label="Resumo da análise">
+    <div class="card indicador">
       <span>Linhas lidas</span>
       <strong>{{ dados.resumo.linhasLidas }}</strong>
     </div>
 
-    <div class="card">
+    <div class="card indicador">
       <span>Linhas válidas</span>
       <strong>{{ dados.resumo.linhasValidas }}</strong>
     </div>
 
-    <div class="card">
+    <div class="card indicador">
       <span>Linhas inválidas</span>
       <strong>{{ dados.resumo.linhasInvalidas }}</strong>
     </div>
 
-    <div class="card">
-      <span>Total de episódios</span>
+    <div class="card indicador">
+      <span>Episódios</span>
       <strong>{{ dados.resumo.totalEpisodios }}</strong>
     </div>
   </section>
 
-  <section class="card">
-    <h2>Ranking de veículos</h2>
+  <section class="card" aria-labelledby="titulo-ranking">
+    <div class="secao-titulo">
+      <div>
+        <h2 id="titulo-ranking">Ranking de veículos</h2>
+        <p>
+          Classificação por pontos, velocidade máxima e placa.
+        </p>
+      </div>
+    </div>
 
     <div class="tabela-container">
       <table>
         <thead>
           <tr>
-            <th>Posição</th>
-            <th>Placa</th>
-            <th>Pontos</th>
-            <th>Velocidade máxima</th>
-            <th>Episódios</th>
+            <th scope="col">Posição</th>
+            <th scope="col">Placa</th>
+            <th scope="col">Pontos</th>
+            <th scope="col">Velocidade máxima</th>
+            <th scope="col">Episódios</th>
           </tr>
         </thead>
 
         <tbody>
-          @for (veiculo of dados.ranking; track veiculo.placa; let i = $index) {
+          @for (
+          veiculo of dados.ranking;
+          track veiculo.placa;
+          let i = $index
+          ) {
           <tr>
-            <td>{{ i + 1 }}</td>
-            <td>{{ veiculo.placa }}</td>
-            <td>{{ veiculo.totalPontos }}</td>
-            <td>{{ veiculo.velocidadeMaxima }} km/h</td>
+            <td>
+              <span class="posicao">{{ i + 1 }}º</span>
+            </td>
+            <td class="placa">{{ veiculo.placa }}</td>
+            <td><strong>{{ veiculo.totalPontos }}</strong></td>
+            <td>
+              {{ formatarNumero(veiculo.velocidadeMaxima) }}
+              km/h
+            </td>
             <td>{{ veiculo.totalEpisodios }}</td>
           </tr>
           } @empty {
           <tr>
-            <td colspan="5">Nenhum veículo no ranking.</td>
+            <td colspan="5" class="vazio">
+              Nenhum veículo com episódio de excesso.
+            </td>
           </tr>
           }
         </tbody>
@@ -86,37 +138,90 @@
     </div>
   </section>
 
-  <section class="card">
-    <h2>Episódios identificados</h2>
+  <section class="card" aria-labelledby="titulo-episodios">
+    <div class="secao-titulo">
+      <div>
+        <h2 id="titulo-episodios">Episódios identificados</h2>
+        <p>
+          Sequências de leituras acima da tolerância permitida.
+        </p>
+      </div>
+
+      <div class="filtro">
+        <label for="gravidade">Filtrar por gravidade</label>
+        <select id="gravidade" [value]="gravidadeSelecionada()" (change)="alterarGravidade($event)">
+          <option value="TODAS">Todas</option>
+          <option value="LEVE">Leve</option>
+          <option value="GRAVE">Grave</option>
+          <option value="GRAVISSIMA">Gravíssima</option>
+        </select>
+      </div>
+    </div>
+
+    <p class="contador">
+      Exibindo {{ episodiosFiltrados().length }}
+      de {{ dados.episodios.length }} episódios
+    </p>
 
     <div class="tabela-container">
       <table>
         <thead>
           <tr>
-            <th>Placa</th>
-            <th>Início</th>
-            <th>Fim</th>
-            <th>Duração</th>
-            <th>Excesso máximo</th>
-            <th>Gravidade</th>
-            <th>Pontos</th>
+            <th scope="col">Placa</th>
+            <th scope="col">Início</th>
+            <th scope="col">Fim</th>
+            <th scope="col">Duração</th>
+            <th scope="col">Vel. máxima</th>
+            <th scope="col">Excesso máximo</th>
+            <th scope="col">Gravidade</th>
+            <th scope="col">Pontos</th>
           </tr>
         </thead>
 
         <tbody>
-          @for (episodio of dados.episodios; track $index) {
+          @for (
+          episodio of episodiosFiltrados();
+          track $index
+          ) {
           <tr>
-            <td>{{ episodio.placa }}</td>
-            <td>{{ episodio.inicio }}</td>
-            <td>{{ episodio.fim }}</td>
-            <td>{{ episodio.duracaoSegundos }} s</td>
-            <td>{{ episodio.excessoMaximoPercentual }}%</td>
-            <td>{{ episodio.gravidade }}</td>
-            <td>{{ episodio.pontos }}</td>
+            <td class="placa">{{ episodio.placa }}</td>
+
+            <td>{{ formatarData(episodio.inicio) }}</td>
+            <td>{{ formatarData(episodio.fim) }}</td>
+
+            <td>
+              {{ formatarDuracao(episodio.duracaoSegundos) }}
+            </td>
+
+            <td>
+              {{ formatarNumero(episodio.velocidadeMaxima) }}
+              km/h
+            </td>
+
+            <td>
+              {{ formatarNumero(episodio.excessoMaximoPercentual) }}%
+            </td>
+
+            <td>
+              <span class="gravidade" [class.leve]="episodio.gravidade === 'LEVE'"
+                [class.grave]="episodio.gravidade === 'GRAVE'" [class.gravissima]="episodio.gravidade === 'GRAVISSIMA'">
+                {{
+                episodio.gravidade === 'GRAVISSIMA'
+                ? 'GRAVÍSSIMA'
+                : episodio.gravidade
+                }}
+              </span>
+            </td>
+
+            <td>
+              <strong>{{ episodio.pontos }}</strong>
+            </td>
           </tr>
           } @empty {
           <tr>
-            <td colspan="7">Nenhum episódio identificado.</td>
+            <td colspan="8" class="vazio">
+              Nenhum episódio encontrado para este filtro.
+            </td>
           </tr>
           }
         </tbody>
@@ -124,34 +229,46 @@
     </div>
   </section>
 
-  <section class="card">
-    <h2>Linhas inválidas</h2>
+  <section class="card" aria-labelledby="titulo-invalidas">
+    <div class="secao-titulo">
+      <div>
+        <h2 id="titulo-invalidas">Linhas inválidas</h2>
+        <p>
+          Registros ignorados durante a análise,
+          sem interromper o processamento.
+        </p>
+      </div>
+    </div>
 
     <div class="tabela-container">
       <table>
         <thead>
           <tr>
-            <th>Linha</th>
-            <th>Motivo</th>
+            <th scope="col">Linha no arquivo</th>
+            <th scope="col">Motivo</th>
           </tr>
         </thead>
 
         <tbody>
-          @for (linha of dados.linhasInvalidas; track linha.linha) {
+          @for (
+          linha of dados.linhasInvalidas;
+          track linha.linha
+          ) {
           <tr>
             <td>{{ linha.linha }}</td>
             <td>{{ linha.motivo }}</td>
           </tr>
           } @empty {
           <tr>
-            <td colspan="2">Nenhuma linha inválida.</td>
+            <td colspan="2" class="vazio">
+              Todas as linhas foram consideradas válidas.
+            </td>
           </tr>
           }
         </tbody>
       </table>
     </div>
   </section>
-
   }
 
 </main>
