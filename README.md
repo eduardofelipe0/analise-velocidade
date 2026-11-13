@@ -10,7 +10,7 @@ O sistema identifica leituras acima do limite permitido, agrupa essas leituras e
 - Java 21
 - Spring Boot 4.1.2
 - Maven
-- JUnit 5
+- JUnit 6.0.3
 
 **Frontend**
 - Angular 21
