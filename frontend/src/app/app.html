@@ -12,6 +12,7 @@
     </div>
   </header>
 
+
   <section class="card upload" aria-labelledby="titulo-upload">
     <div class="secao-titulo">
       <div>
@@ -24,8 +25,20 @@
       <div class="seletor-arquivo">
         <label for="arquivo-csv">Selecionar arquivo CSV</label>
 
-        <input id="arquivo-csv" type="file" accept=".csv,text/csv" [disabled]="carregando()"
-          (change)="selecionarArquivo($event)" />
+        <div class="upload-linha">
+          <input id="arquivo-csv" type="file" accept=".csv,text/csv" [disabled]="carregando()"
+            (change)="selecionarArquivo($event)" />
+
+          <button type="button" (click)="analisar()" [disabled]="!arquivoSelecionado() || carregando()"
+            [attr.aria-busy]="carregando()">
+            @if (carregando()) {
+            <span class="spinner" aria-hidden="true"></span>
+            Analisando...
+            } @else {
+            Analisar CSV
+            }
+          </button>
+        </div>
 
         @if (arquivoSelecionado(); as arquivo) {
         <p class="arquivo-selecionado">
@@ -36,16 +49,6 @@
         <p class="ajuda">Nenhum arquivo selecionado.</p>
         }
       </div>
-
-      <button type="button" (click)="analisar()" [disabled]="!arquivoSelecionado() || carregando()"
-        [attr.aria-busy]="carregando()">
-        @if (carregando()) {
-        <span class="spinner" aria-hidden="true"></span>
-        Analisando...
-        } @else {
-        Analisar CSV
-        }
-      </button>
     </div>
 
     @if (carregando()) {
