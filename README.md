@@ -46,8 +46,6 @@ analise-velocidade/
 - npm
 - Git (para clonar o repositório)
 
-Não é necessário instalar o Maven separadamente, pois o backend utiliza Maven Wrapper.
-
 ## Como executar
 
 ### 1. Backend
