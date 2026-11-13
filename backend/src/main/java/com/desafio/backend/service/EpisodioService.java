@@ -102,13 +102,13 @@ public class EpisodioService {
             );
 
             BigDecimal percentual = leitura.velocidadeKmh()
-                    .subtract(leitura.limiteKmh())
-                    .multiply(BigDecimal.valueOf(100))
-                    .divide(
-                            leitura.limiteKmh(),
-                            10,
-                            RoundingMode.HALF_UP
-                    );
+                .subtract(leitura.limiteKmh())
+                .multiply(BigDecimal.valueOf(100))
+                .divide(
+                        leitura.limiteKmh(),
+                        1,
+                        RoundingMode.HALF_UP
+                );
 
             excessoMaximo = excessoMaximo.max(percentual);
         }
